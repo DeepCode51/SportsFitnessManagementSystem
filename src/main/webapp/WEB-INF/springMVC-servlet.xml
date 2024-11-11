@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="
+  http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+  http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+  http://www.springframework.org/schema/mvc
+  http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd">
+    <!--启动注解，注册服务-->
+    <mvc:annotation-driven content-negotiation-manager="contentNegotiationManagerFactoryBean"/>
+    <!--配置返回值转换器-->
+    <bean id="contentNegotiationManagerFactoryBean" class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+        <!--是否支持后缀匹配-->
+        <property name="favorPathExtension" value="false"/>
+        <!--是否支持参数匹配-->
+        <property name="favorParameter" value="true"/>
+        <!--是否accept-header匹配-->
+        <property name="ignoreAcceptHeader" value="false"/>
+        <property name="mediaTypes">
+            <map>
+                <!--表示.json结尾的请求返回json-->
+                <entry key="json" value="application/json"/>
+            </map>
+        </property>
+    </bean>
+    <!--启动自动扫描-->
+    <context:component-scan base-package="com.stern.controller">
+        <!--扫描包规则，只扫描@controller注解的java类-->
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+    <!--配置视图解析器-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/"></property>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+    <!--配置拦截器-->
+    <mvc:interceptors>
+        <mvc:interceptor><!--配置局部拦截器，需要满足下列路径条件-->
+            <mvc:mapping path="/**"/>
+            <mvc:exclude-mapping path="/user/register.html" />
+            <mvc:exclude-mapping path="/user/verifyemailandphone.html" />
+            <mvc:exclude-mapping path="/login/captcha.html" />
+            <mvc:exclude-mapping path="/kaptchaverify.html" />
+            <mvc:exclude-mapping path="/login.html" />
+            <mvc:exclude-mapping path="/user/login.html" />
+            <mvc:exclude-mapping path="/user/resetpwd.html" />
+            <mvc:exclude-mapping path="/index.html" />
+            <mvc:exclude-mapping path="/about.html" />
+            <mvc:exclude-mapping path="/news.html" />
+            <mvc:exclude-mapping path="/newsajax.html"/>
+            <mvc:exclude-mapping path="/newsinfo.html"/>
+            <mvc:exclude-mapping path="/course.html" />
+            <mvc:exclude-mapping path="/courseinfo.html" />
+            <bean class="com.stern.interceptor.LoginInterceptor"/><!--自定义拦截器注册-->
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <!-- 配置校验器 -->
+    <bean id="validator"
+          class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <!-- 校验器，使用hibernate校验器 -->
+        <property name="providerClass"
+                  value="org.hibernate.validator.HibernateValidator"/>
+    </bean>
+    <!--1*1024*1024即1M resolveLazily属性启用是为了推迟文件解析，以便捕获文件大小异常 -->
+    <!--文件上传解析器-->
+    <bean id="multipartResolver"
+          class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="1048576"/>
+        <property name="defaultEncoding" value="UTF-8"/>
+        <property name="resolveLazily" value="true"/>
+    </bean>
+</beans>
